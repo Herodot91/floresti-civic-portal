@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: Florești Civic Portal API
+  version: 1.0.0
+  description: |
+    Read-only REST API behind the Florești Civic Portal, a prototype for a fictional city.
+    All data is fictional.
+
+    **How it is served:** each resource is a JSON file under `public/api/v1/`, published
+    next to the app on GitHub Pages. That is why paths end in `.json` and why only `GET` exists.
+    Actions in the portal (paying a tax, topping up a card, switching auto-pay) change the state of
+    the open page only. Nothing is written back.
+
+    **Standards:** this file is checked by `.spectral.yaml` and every JSON file is checked against
+    its schema by `tools/contract-test.mjs`, both in GitHub Actions.
+  contact:
+    name: Constantin Plămădeală
+    url: https://github.com/Herodot91
+servers:
+  - url: https://herodot91.github.io/floresti-civic-portal
+    description: GitHub Pages
+  - url: http://localhost:3000
+    description: Local development (npm run dev)
+tags:
+  - name: citizen
+    description: The signed-in citizen
+  - name: city
+    description: City projects
+  - name: services
+    description: Payments, transport and benefits
+paths:
+  /api/v1/user.json:
+    get:
+      tags: [citizen]
+      operationId: getUser
+      summary: Get the citizen's profile
+      description: Name and email of the citizen who is signed in.
+      responses:
+        '200':
+          description: The profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                name: Elena
+                email: elena.popescu@email.com
+  /api/v1/projects.json:
+    get:
+      tags: [city]
+      operationId: listProjects
+      summary: List city projects
+      description: Construction and development projects, with budget, progress, stakeholders and milestones.
+      responses:
+        '200':
+          description: All projects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+              example:
+                - id: 4
+                  name: City Park Revitalization
+                  status: Completed
+                  progress: 100
+                  budget: 5000000
+                  company: GreenScapes
+                  endDate: '2023-05-01'
+                  description: Complete overhaul of the central city park.
+                  stakeholders: [Florești Parks Department, Local Residents]
+                  milestones:
+                    - name: Inauguration
+                      date: '2023-05-01'
+                      status: Completed
+                  imageUrl: https://picsum.photos/seed/park/600/400
+                  coordinates:
+                    x: 65
+                    y: 30
+  /api/v1/transport.json:
+    get:
+      tags: [services]
+      operationId: getTransport
+      summary: Get the transport card
+      description: Name and balance of the citizen's transport card.
+      responses:
+        '200':
+          description: The transport card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transport'
+              example:
+                cardName: Florești MetroCard
+                balance: 125.5
+                currency: MDL
+  /api/v1/taxes.json:
+    get:
+      tags: [services]
+      operationId: listTaxes
+      summary: List taxes
+      description: Taxes the citizen owes or has paid.
+      responses:
+        '200':
+          description: All taxes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tax'
+              example:
+                - id: 1
+                  name: Property Tax
+                  amount: 890
+                  dueDate: '2024-06-30'
+                  status: Overdue
+                  overdue: true
+  /api/v1/utilities.json:
+    get:
+      tags: [services]
+      operationId: listUtilities
+      summary: List utilities
+      description: Water, gas, electricity and waste collection, with usage, amount due and auto-pay.
+      responses:
+        '200':
+          description: All utilities.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Utility'
+              example:
+                - name: Water
+                  usage: 23.5 m³
+                  change: 5
+                  status: Due
+                  amount: 345.5
+                  dueDate: '2024-07-25'
+                  autoPay: false
+  /api/v1/benefits.json:
+    get:
+      tags: [services]
+      operationId: listBenefits
+      summary: List benefits
+      description: Social benefits the citizen receives.
+      responses:
+        '200':
+          description: All benefits.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Benefit'
+              example:
+                - id: 1
+                  name: Pensioner Compensation
+                  status: Approved and Processed
+                  nextPaymentDate: January 15
+                  annualAmount: 37560
+                  recipient: Elena's Mother
+components:
+  schemas:
+    User:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          description: First name.
+        email:
+          type: string
+          format: email
+          description: Email address.
+    Milestone:
+      type: object
+      required: [name, date, status]
+      properties:
+        name:
+          type: string
+          description: Milestone name.
+        date:
+          type: string
+          format: date
+          description: Planned or actual date.
+        status:
+          type: string
+          description: Whether the milestone is done.
+          enum: [Completed, Upcoming]
+    Coordinates:
+      type: object
+      required: [x, y]
+      properties:
+        x:
+          type: number
+          description: Horizontal position on the city map, in percent.
+        y:
+          type: number
+          description: Vertical position on the city map, in percent.
+    Project:
+      type: object
+      required: [id, name, status, progress, budget, company, endDate, description, stakeholders, milestones, imageUrl]
+      properties:
+        id:
+          type: integer
+          description: Project identifier.
+        name:
+          type: string
+          description: Project name.
+        status:
+          type: string
+          description: Stage of the project.
+          enum: [In Progress, Planning, Approved, Completed]
+        progress:
+          type: integer
+          description: Percent complete.
+          minimum: 0
+          maximum: 100
+        budget:
+          type: number
+          description: Budget amount.
+        company:
+          type: string
+          description: Company carrying out the project.
+        endDate:
+          type: string
+          format: date
+          description: Planned end date.
+        description:
+          type: string
+          description: What the project is.
+        stakeholders:
+          type: array
+          description: Organisations and groups involved.
+          items:
+            type: string
+        milestones:
+          type: array
+          description: Key steps, in order.
+          items:
+            $ref: '#/components/schemas/Milestone'
+        imageUrl:
+          type: string
+          format: uri
+          description: Photo of the project.
+        mapImageUrl:
+          type: string
+          format: uri
+          description: Map image of the project. Only some projects have one.
+        coordinates:
+          description: Position of the project on the city map. Only some projects have one.
+          allOf:
+            - $ref: '#/components/schemas/Coordinates'
+    Transport:
+      type: object
+      required: [cardName, balance, currency]
+      properties:
+        cardName:
+          type: string
+          description: Name of the transport card.
+        balance:
+          type: number
+          description: Money left on the card.
+        currency:
+          type: string
+          description: Currency code of the balance.
+    Tax:
+      type: object
+      required: [id, name, amount, dueDate, status, overdue]
+      properties:
+        id:
+          type: integer
+          description: Tax identifier.
+        name:
+          type: string
+          description: Tax name.
+        amount:
+          type: number
+          description: Amount to pay.
+        dueDate:
+          type: string
+          format: date
+          description: Payment deadline.
+        status:
+          type: string
+          description: Payment status.
+          enum: [Due, Paid, Overdue]
+        overdue:
+          type: boolean
+          description: True when the deadline has passed and the tax is unpaid.
+        paymentDate:
+          type: string
+          description: Date of payment. Only present when the tax is paid.
+    Utility:
+      type: object
+      required: [name, usage, change, status, amount, dueDate, autoPay]
+      properties:
+        name:
+          type: string
+          description: Which utility this is.
+          enum: [Water, Gas, Electricity, Waste Collection]
+        usage:
+          type: string
+          description: Usage with its unit. A dash when not metered.
+        change:
+          type: number
+          description: Change in usage against the previous period, in percent.
+        status:
+          type: string
+          description: Payment or service status.
+          enum: [Due, Paid, On Schedule, Delayed]
+        amount:
+          type: number
+          nullable: true
+          description: Amount to pay. Null when nothing is billed.
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          description: Payment deadline. Null when nothing is billed.
+        autoPay:
+          type: boolean
+          description: Whether automatic payment is switched on.
+        paymentDate:
+          type: string
+          description: Date of payment. Only present when the utility is paid.
+    Benefit:
+      type: object
+      required: [id, name, status, nextPaymentDate, annualAmount, recipient]
+      properties:
+        id:
+          type: integer
+          description: Benefit identifier.
+        name:
+          type: string
+          description: Benefit name.
+        status:
+          type: string
+          description: Processing status.
+          enum: [Approved and Processed, Pending]
+        nextPaymentDate:
+          type: string
+          description: Day of the next payment, as text (for example January 15).
+        annualAmount:
+          type: number
+          description: Total paid per year.
+        recipient:
+          type: string
+          description: Who receives the benefit.
