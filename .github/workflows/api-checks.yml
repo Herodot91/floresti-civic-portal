@@ -1,0 +1,36 @@
+name: API checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/openapi.yaml
+      - .spectral.yaml
+      - public/api/**
+      - tools/**
+      - .github/workflows/api-checks.yml
+  pull_request:
+    paths:
+      - docs/openapi.yaml
+      - .spectral.yaml
+      - public/api/**
+      - tools/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lint the OpenAPI spec against our API standards
+        run: npx --yes @stoplight/spectral-cli@6.17.0 lint docs/openapi.yaml --fail-severity=error
+      - name: Contract test - the JSON files match the spec
+        run: |
+          npm install --prefix tools --no-save ajv@8.17.1 ajv-formats@3.0.1 js-yaml@4.1.0
+          node tools/contract-test.mjs
