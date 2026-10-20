@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "name": "Pensioner Compensation",
+    "status": "Approved and Processed",
+    "nextPaymentDate": "January 15",
+    "annualAmount": 37560,
+    "recipient": "Elena's Mother"
+  }
+]
