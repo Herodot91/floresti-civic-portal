@@ -1,0 +1,39 @@
+[
+  {
+    "name": "Water",
+    "usage": "23.5 m³",
+    "change": 5,
+    "status": "Due",
+    "amount": 345.5,
+    "dueDate": "2024-07-25",
+    "autoPay": false
+  },
+  {
+    "name": "Gas",
+    "usage": "45.2 m³",
+    "change": 12,
+    "status": "Due",
+    "amount": 780.2,
+    "dueDate": "2024-07-25",
+    "autoPay": true
+  },
+  {
+    "name": "Electricity",
+    "usage": "156 kWh",
+    "change": -2,
+    "status": "Paid",
+    "amount": 450,
+    "dueDate": "2024-06-25",
+    "autoPay": false,
+    "paymentDate": "2024-06-24"
+  },
+  {
+    "name": "Waste Collection",
+    "usage": "-",
+    "change": 0,
+    "status": "On Schedule",
+    "amount": null,
+    "dueDate": null,
+    "autoPay": false
+  }
+]
