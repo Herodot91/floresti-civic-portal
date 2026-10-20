@@ -1,0 +1,106 @@
+# API standards for this repository, checked in CI by .github/workflows/api-checks.yml
+# Base: Spectral's built-in OpenAPI rules (this includes checking every example against its schema).
+# Below: our own house rules.
+extends: ["spectral:oas"]
+
+rules:
+  # The repository has no licence file yet, so the spec does not declare one.
+  info-license: off
+  license-url: off
+
+  op-operation-id-camel-case:
+    description: operationId must be camelCase (getUser, listProjects).
+    severity: error
+    given: $.paths[*][*].operationId
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+
+  op-summary-required:
+    description: Every operation needs a short summary.
+    severity: error
+    given: $.paths[*][get,put,post,delete,patch]
+    then:
+      field: summary
+      function: truthy
+
+  path-versioned:
+    description: Every path starts with a version, /api/v1/.
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^/api/v[0-9]+/"
+
+  path-kebab-case:
+    description: Path segments are lowercase and kebab-case. The files this API is served from end in .json.
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-9]+(-[a-z0-9]+)*)+(\\.json)?$"
+
+  path-no-verbs:
+    description: Use resource names in paths, not action names.
+    severity: warn
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/(send|get|create|update|delete|verify|check|list)-"
+
+  read-only-api:
+    description: This API is served as static files, so only GET is allowed.
+    severity: error
+    given: $.paths[*][post,put,patch,delete]
+    then:
+      function: falsy
+
+  media-types-have-examples:
+    description: Every response body needs an example (example or examples).
+    severity: error
+    given: $.paths[*][*].responses[*].content[*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required: [example]
+            - required: [examples]
+
+  schema-names-pascal-case:
+    description: Schema names are PascalCase.
+    severity: error
+    given: $.components.schemas[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[A-Z][A-Za-z0-9]*$"
+
+  property-names-camel-case:
+    description: Property names are camelCase, like the JSON the app already uses.
+    severity: error
+    given: $.components.schemas[*].properties[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+
+  schema-properties-described:
+    description: Every schema property needs a description.
+    severity: error
+    given: $.components.schemas[*].properties[*]
+    then:
+      field: description
+      function: truthy
+
+  tags-have-descriptions:
+    description: Every declared tag needs a description.
+    severity: warn
+    given: $.tags[*]
+    then:
+      field: description
+      function: truthy
