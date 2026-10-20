@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-// FIX: UserData type is now imported from types.ts, and initialUserData value from mockData.
-import { initialUserData } from './data/mockData';
+import { loadUserData } from './services/api';
 import type { View, UserData, Utility } from './types';
 import LoginScreen from './components/auth/LoginScreen';
 import Layout from './components/layout/Layout';
@@ -14,11 +13,11 @@ import BenefitsView from './components/benefits/BenefitsView';
 import type { Tax } from './types';
 
 
-const App: React.FC = () => {
+const Portal: React.FC<{ initialData: UserData }> = ({ initialData }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [view, setView] = useState<View>('DASHBOARD');
-    const [userData, setUserData] = useState<UserData>(initialUserData);
+    const [userData, setUserData] = useState<UserData>(initialData);
 
     useEffect(() => {
         // Simulate checking auth status and if user should be remembered
@@ -26,9 +25,6 @@ const App: React.FC = () => {
         if (isRemembered) {
             setIsLoggedIn(true);
         }
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
     }, []);
 
     const handleLogin = useCallback((rememberMe: boolean) => {
@@ -128,6 +124,34 @@ const App: React.FC = () => {
             {renderView()}
         </Layout>
     );
+};
+
+// Loads the data from the API first, then shows the portal.
+const App: React.FC = () => {
+    const [data, setData] = useState<UserData | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadUserData()
+            .then(setData)
+            .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+    }, []);
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-brand-primary p-6">
+                <div className="text-white text-lg text-center">Could not load data from the Florești API. {error}</div>
+            </div>
+        );
+    }
+    if (!data) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-brand-primary">
+                <div className="text-white text-2xl font-semibold animate-pulse">Loading Florești Civic Portal...</div>
+            </div>
+        );
+    }
+    return <Portal initialData={data} />;
 };
 
 export default App;
